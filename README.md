@@ -13,8 +13,17 @@
 
 ## 📺 Demo
 
-> Record a 2–4 minute Loom screen recording using [demo_script.md](demo_script.md)
-> and paste the Loom link here.
+>  recording using [demo_script.md](demo_script.md)
+>  Loom Recording: https://www.loom.com/share/75dd3aa627cb452f85fc4d32011c1e66
+
+This demo covers:
+
+* System startup
+* Voice interview flow
+* Adaptive follow-up questions
+* Grounded answer evaluation
+* Final feedback dashboard
+
 
 ---
 
