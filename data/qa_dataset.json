@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "question": "Can you walk me through how you would design a URL shortener service like bit.ly?",
+    "ideal_answer": "A URL shortener needs a few core components: an API layer to accept long URLs and return short ones, a hash/encoding function (Base62 encoding of an auto-increment ID or a random 6-7 char string), a database to map short codes to original URLs, and a redirect layer. For scale, you'd want a distributed ID generator (like Snowflake), caching (Redis) for hot URLs since reads far outnumber writes, and a CDN. The DB schema is simple: id, short_code, original_url, created_at, expiry, click_count. For throughput, read replicas handle redirect traffic. Key challenges: hash collisions, custom aliases, analytics, and expiration.",
+    "category": "system_design",
+    "difficulty": "medium",
+    "keywords": ["base62", "hashing", "redis", "caching", "database", "scalability", "CDN", "distributed"]
+  },
+  {
+    "id": 2,
+    "question": "Explain the difference between a process and a thread, and when you would use one over the other.",
+    "ideal_answer": "A process is an independent program with its own memory space, file handles, and system resources. A thread is a lightweight unit of execution that lives within a process and shares that process's memory. Threads are cheaper to create and communicate via shared memory, but require synchronization (locks, semaphores) to avoid race conditions. Processes offer isolation — a crash in one doesn't affect others — making them better for fault tolerance. Use threads for I/O-bound tasks where you need shared state (e.g., a web server handling concurrent requests). Use processes for CPU-bound tasks to bypass Python's GIL, or when isolation is critical (e.g., microservices, browser tabs).",
+    "category": "operating_systems",
+    "difficulty": "medium",
+    "keywords": ["process", "thread", "GIL", "concurrency", "isolation", "shared memory", "synchronization", "race condition"]
+  },
+  {
+    "id": 3,
+    "question": "What is the CAP theorem and how does it influence your database choices?",
+    "ideal_answer": "CAP theorem states that a distributed system can guarantee at most two of three properties: Consistency (every read gets the latest write), Availability (every request gets a response), and Partition Tolerance (system operates despite network splits). Since network partitions are unavoidable in distributed systems, you're really choosing between CP and AP. CP systems (like HBase, Zookeeper) sacrifice availability during partitions to ensure data consistency — good for banking or inventory. AP systems (like Cassandra, DynamoDB) stay available but may return stale data — suitable for social feeds, metrics. This influences schema design, replication strategy, and how you handle conflicts.",
+    "category": "distributed_systems",
+    "difficulty": "hard",
+    "keywords": ["CAP", "consistency", "availability", "partition tolerance", "Cassandra", "HBase", "distributed", "replication"]
+  },
+  {
+    "id": 4,
+    "question": "Describe how garbage collection works in a language you know well. What are the trade-offs?",
+    "ideal_answer": "In Python, garbage collection uses reference counting as the primary mechanism — each object tracks how many references point to it; when count hits 0 the object is freed immediately. This gives deterministic cleanup but can't handle cyclic references, so Python supplements with a cyclic GC that periodically traces object graphs. In the JVM (Java/Kotlin), GC is generational: most objects die young so they live in Eden space, survivors get promoted to older generations, which are collected less frequently. Modern collectors (G1, ZGC) aim for low-pause-time by doing concurrent marking. Trade-offs: GC pauses can cause latency spikes; tuning heap sizes and GC algorithms is non-trivial; real-time systems may prefer manual memory management (Rust, C++) for predictability.",
+    "category": "language_internals",
+    "difficulty": "medium",
+    "keywords": ["reference counting", "cyclic GC", "generational", "heap", "pause time", "JVM", "Python", "memory management"]
+  },
+  {
+    "id": 5,
+    "question": "How would you approach designing a rate limiter? What algorithms would you consider?",
+    "ideal_answer": "A rate limiter controls how many requests a client can make in a time window. Common algorithms: Token Bucket — tokens accumulate at a fixed rate up to a max bucket size; each request consumes a token. Allows bursting. Leaky Bucket — requests enter a queue that drains at a fixed rate, smoothing traffic. Fixed Window Counter — count requests per time window; simple but vulnerable to boundary bursts. Sliding Window Log — store timestamps of all requests in a window; accurate but memory-heavy. Sliding Window Counter — hybrid that weights the previous window's count; good balance. For distributed systems, store counters in Redis with atomic operations (INCR + EXPIRE). Consider per-user, per-IP, or per-endpoint limits and return 429 status with Retry-After header.",
+    "category": "system_design",
+    "difficulty": "medium",
+    "keywords": ["token bucket", "leaky bucket", "sliding window", "fixed window", "Redis", "429", "distributed", "rate limiting"]
+  },
+  {
+    "id": 6,
+    "question": "Explain the SOLID principles with a brief example for each.",
+    "ideal_answer": "S — Single Responsibility: a class should have one reason to change. A User class shouldn't handle email sending; delegate to EmailService. O — Open/Closed: open for extension, closed for modification. Use strategy pattern or inheritance to add behavior without editing existing code. L — Liskov Substitution: subtypes must be substitutable for their base type without breaking correctness. A Square extending Rectangle breaks this if you can set width/height independently. I — Interface Segregation: clients shouldn't depend on interfaces they don't use. Split a fat IWorker interface into IWorkable and IFeedable. D — Dependency Inversion: high-level modules shouldn't depend on low-level ones; both depend on abstractions. Inject a Logger interface rather than hardcoding FileLogger.",
+    "category": "software_design",
+    "difficulty": "medium",
+    "keywords": ["SOLID", "single responsibility", "open closed", "Liskov", "interface segregation", "dependency inversion", "design patterns"]
+  },
+  {
+    "id": 7,
+    "question": "Walk me through what happens when you type a URL into a browser and hit Enter.",
+    "ideal_answer": "First, the browser checks its cache; if not found, queries the OS DNS resolver, then a recursive DNS resolver, which traverses the DNS hierarchy (root → TLD → authoritative) to resolve the domain to an IP. A TCP connection is established via three-way handshake (SYN, SYN-ACK, ACK). If HTTPS, a TLS handshake follows — exchanging certificates, negotiating cipher suites, generating session keys. The browser sends an HTTP GET request. The server processes it (load balancer → app server → possibly DB/cache) and returns an HTTP response. The browser parses HTML, discovers CSS/JS/image assets and fetches them (often in parallel via HTTP/2 multiplexing), builds the DOM and CSSOM, runs layout, and paints to screen. Service workers or CDNs may intercept requests along the way.",
+    "category": "networking",
+    "difficulty": "medium",
+    "keywords": ["DNS", "TCP", "TLS", "HTTP", "three-way handshake", "DOM", "CSSOM", "CDN", "load balancer"]
+  },
+  {
+    "id": 8,
+    "question": "What are database indexes? When would you add one, and when would it hurt performance?",
+    "ideal_answer": "An index is a data structure (typically a B-tree or hash map) that allows the database to find rows matching a condition without a full table scan. You add indexes on columns used in WHERE clauses, JOIN conditions, or ORDER BY. Composite indexes should match the query's column order. Indexes dramatically speed up reads — O(log n) instead of O(n). However, they hurt write performance because every INSERT, UPDATE, DELETE must also update the index. They also consume disk space. Over-indexing a write-heavy table is a common mistake. Covering indexes (where the index contains all columns the query needs) avoid table lookups entirely. Partial indexes and expression indexes are advanced tools for specific patterns.",
+    "category": "databases",
+    "difficulty": "medium",
+    "keywords": ["B-tree", "index", "covering index", "composite index", "write overhead", "query optimization", "full table scan"]
+  },
+  {
+    "id": 9,
+    "question": "How does async/await work under the hood in Python? How does it differ from threading?",
+    "ideal_answer": "Python's async/await is built on coroutines and an event loop. When you await an I/O operation, the coroutine suspends and yields control back to the event loop, which picks up another ready coroutine. No OS thread context-switch occurs — everything runs on a single thread. asyncio is ideal for I/O-bound concurrency: thousands of simultaneous network connections with minimal overhead. Threading, by contrast, uses OS threads; each thread gets a stack and context, so switching is heavier. Python's GIL means CPU-bound code doesn't benefit from threading (only one thread runs Python bytecode at a time). Key difference: async is cooperative multitasking (coroutine decides when to yield); threading is preemptive (OS can interrupt). For CPU-bound work, use multiprocessing.",
+    "category": "concurrency",
+    "difficulty": "hard",
+    "keywords": ["event loop", "coroutine", "asyncio", "GIL", "cooperative", "preemptive", "I/O bound", "CPU bound", "threading"]
+  },
+  {
+    "id": 10,
+    "question": "Describe a situation where you had to debug a hard production issue. What was your approach?",
+    "ideal_answer": "A strong answer follows a structured debugging approach: First, gather signals — logs, metrics, error rates, traces — to understand the blast radius and timeline. Form hypotheses based on recent deployments or traffic patterns. Reproduce or isolate the issue in a lower environment if possible. Use binary search (narrow down service, endpoint, code path) rather than random guessing. For performance issues, profile before optimizing. For data issues, trace a specific failing record through the system. Communicate status to stakeholders. Once found, fix with minimal blast radius, add a regression test, and write a postmortem addressing root cause and prevention. The candidate should emphasize calm, systematic thinking, use of observability tooling, and cross-team communication.",
+    "category": "behavioral",
+    "difficulty": "medium",
+    "keywords": ["debugging", "logs", "metrics", "traces", "hypothesis", "postmortem", "observability", "root cause", "profiling"]
+  }
+]
